@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Payment Interface 1`] = `
+Object {
+  "congrat": [Function],
+  "createType": [Function],
+  "type": undefined,
+  "visit": [Function],
+}
+`;
+
+exports[`Payment congrats Efecty 1`] = `
+Object {
+  "heading": "¡Apúrate a pagar!",
+  "status": "success",
+  "substatus": null,
+  "title": "Paga \${price} en \${paymentMethodName} para reservar tu compra",
+}
+`;
+
+exports[`Payment congrats visa 1`] = `
+Object {
+  "heading": "¡Excelente compra!",
+  "status": "success",
+  "substatus": null,
+  "title": "El jueves 2017-05-18T00:00:00.000-05:00. te llegará el producto",
+}
+`;

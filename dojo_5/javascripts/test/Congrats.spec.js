@@ -1,13 +1,12 @@
-const Congrats = require('../congrats')
-const Order = require('../order')
+const createOrder = require('../Order/Order')
 
 const efectyBuyEqualPay = require('./params/efectyBuyEqualPay')
 const creditCardByEqualPayShippedByME = require('./params/creditCardByEqualPayShippedByME')
 const creditCardBuyEqualPayWithCustomShipping = require('./params/creditCardBuyEqualPayWithCustomShipping')
 
 const generateCongrat = order_data => () => {
-  const order = Order(order_data)
-  const result = order.congrat(Congrats)
+  const order = createOrder(order_data)
+  const result = order.congrat()
   expect(result).toMatchSnapshot()
 }
 
