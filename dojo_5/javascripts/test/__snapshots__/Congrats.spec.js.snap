@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Congrats B = P by credit card ship ME 1`] = `
+Object {
+  "heading": "¡Excelente compra!",
+  "status": "success",
+  "substatus": null,
+  "title": "El jueves 2017-05-18T00:00:00.000-05:00. te llegará el producto",
+}
+`;
+
+exports[`Congrats B = P should get rendered congrats for Efecty 1`] = `
+Object {
+  "heading": "¡Apúrate a pagar!",
+  "status": "success",
+  "substatus": null,
+  "title": "Paga \${price} en \${paymentMethodName} para reservar tu compra",
+}
+`;
+
+exports[`Congrats B = P should render congrats for orders paid by credit cards shipped customly 1`] = `
+Object {
+  "heading": "¡Tu pago está aprobado!",
+  "status": "success",
+  "substatus": null,
+  "title": "Coordina con el vendedor el envío",
+}
+`;
