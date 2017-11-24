@@ -11,6 +11,15 @@ var keypress = require('keypress');
 
 keypress(process.stdin);
 
+const ProtoCollideable = {
+    acceptPacman() {
+        return true
+    },
+    acceptPhanton() {
+        return true
+    }
+}
+
 const ProtoEmptySpace = {
     id: 'empty space',
     acceptPacman() {
@@ -41,13 +50,13 @@ const emoji = (emoji) => {
     }
 }
 const none = emoji(' ')
-const positionable = (entity, emoji, current = [0,0]) => {
-
+const positionable = (entity, emoji, collideable, current = [0,0]) => {
 
     return {
         emoji,
         entity,
         current,
+        collideable,
         up() {
             const [x, y] = this.current
             return [x, (y - 1)]
@@ -72,13 +81,42 @@ const positionable = (entity, emoji, current = [0,0]) => {
         }
     }
 }
-const cherry = positionable(createCherry(), emoji('🍒'))
-const phanton = positionable(createPhanton(), emoji('👻'))
-const pacman = positionable(createPacman(), emoji('😀'), [1, 0])
+
+const createCollideable = (specs) => {
+
+    const collideable = Object.create(ProtoCollideable)
+    Object.assign(collideable, specs)
+    return collideable
+}
+
+const pacmanCollide = createCollideable()
+const phantonCollide = createCollideable({
+    acceptPacman(pacman) {
+        const [x, y] = pacman.current
+        pacman = positionable(createEmptySpace(), emoji('X'), [x, y])
+    }
+})
+const cherryCollide = createCollideable({
+    acceptPacman(pacman) {
+        makeCherry = false
+        return true
+    }
+})
+const wallCollide = createCollideable({
+    acceptPacman(pacman) {
+        return false
+    }
+})
+
+const cherry = positionable(createCherry(), emoji('🍒'), cherryCollide)
+const phanton = positionable(createPhanton(), emoji('👻'), phantonCollide, [4, 2])
+const pacman = positionable(createPacman(), emoji('😀'), pacmanCollide, [1, 0])
+
+console.log(1, cherry.entity.acceptPacman + '')
 
 const defaultMatrix = [
     ['|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'],
-    ['|', ' ', ' ', '|', ' ', '|', ' ', cherry, '|'],
+    ['|', ' ', ' ', '|', ' ', '|', ' ', ' ', '|'],
     [' ', ' ', ' ', '|', phanton, '|', ' ', ' ', ' '],
     ['|', ' ', ' ', '|', ' ', '|', ' ', ' ', '|'],
     ['|', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|'],
@@ -94,10 +132,10 @@ const createMatrix = (matrix) => {
 
         return row.map((cell, y) => {
             if (cell === ' ') {
-                return positionable(createEmptySpace(), emoji(cell), [x, y])
+                return positionable(createEmptySpace(), emoji(cell), pacmanCollide, [x, y])
             }
             if (cell === '|') {
-                return positionable(createWall(), emoji(cell), [x, y])
+                return positionable(createWall(), emoji(cell), wallCollide, [x, y])
             }
             cell.setCurrent([x, y])
             return cell
@@ -109,16 +147,10 @@ let matrix;
 const draw = (matrix) => {
     
     process.stdout.write('\033c');
-    const [pacman_x, pacman_y] = pacman.current
-    
+
     matrix.forEach((row, y) => {
 
         const nana = row.map((cell, x) => {
-
-            if (pacman_x === x && pacman_y === y) {
-                return pacman.show()
-            }
-
             return cell.show()
         })
         console.log(nana.join(' '))
@@ -126,16 +158,30 @@ const draw = (matrix) => {
     pacman.entity.describe(describePacman)
 }
 
-const checkCollition = (thing, pacman) => {
-    return thing.entity.acceptPacman(pacman.entity)
+const checkCollition = (next_cell, pacman) => {
+    next_cell.entity.acceptPacman(pacman.entity)
+
+    console.log(JSON.stringify(next_cell))
+
+    console.log(2, next_cell.entity.acceptPacman + '')
+
+    return next_cell.collideable.acceptPacman(pacman)
 }
 
 matrix = createMatrix(defaultMatrix)
 matrix[pacman.current[1]][pacman.current[0]] = pacman
 draw(matrix)
 
+let makeCherry = false
+
+const setCherry = setInterval(() => {
+    makeCherry = true
+}, 3000)
+
 process.stdin.on('keypress', function (ch, key) {
+
     if (key && key.ctrl && key.name == 'c') {
+        clearInterval(setCherry)
         process.stdin.pause();
     }
 
@@ -143,19 +189,26 @@ process.stdin.on('keypress', function (ch, key) {
 
     matrix = createMatrix(defaultMatrix)
 
+    if (makeCherry) {
+        matrix[0][4] = cherry
+    }
+
     const Pointer = {
         point: current,
         checkCollition(direction) {
             let next = this.getNextByDirection(direction)
-
+            console.log('collide: ', next.show(), pacman.show())
             const collide = checkCollition(next, pacman)
 
             if (collide)  {
                 this[direction]()
             }
+            const [x, y] = pacman.current
+            matrix[y][x] = pacman
         },
         getNextByDirection(direction) {
             const [x, y] = pacman[direction]()
+            console.log(y, x)
             return matrix[y][x]
         },
         speed: 1,
@@ -186,6 +239,7 @@ process.stdin.on('keypress', function (ch, key) {
         
         if (pacman.entity.getStatus() === 'dead') {
             process.stdin.pause();
+            clearInterval(setCherry)
             return console.log('GAME OVER')
         }
 
