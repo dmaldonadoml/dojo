@@ -1,0 +1,13 @@
+.App {
+  padding: 10px;
+}
+.room-card {
+  padding: 10px;
+}
+.searcher {
+  padding: 10px;
+  border: 1px solid black;
+}
+.searcher .filters-box {
+  padding: 10px;
+}
