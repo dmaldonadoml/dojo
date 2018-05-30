@@ -2,25 +2,23 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import HomeView from './src/HomeView';
-import SearchView from './src/SearchView';
-import HeaderView from './src/HeaderView';
 import Teacher from './src/Teacher';
 import Room from './src/Room';
-import Label from './src/Label';
-import RoomsListView from './src/RoomListView';
 import RoomsList from './src/RoomList';
+import TeacherWelcomeMessage from './src/TeacherWelcomeMessage';
+import CustomFoundElements from './src/CustomFoundElements';
+
 import CapacityFilter from './src/requests/Capacity';
 import AreaFilter from './src/requests/Area';
 import ComputersFilter from './src/requests/Computers';
 
 const rooms = [
-    new Room(new Label('Lab A'), 5, 10),
-    new Room(new Label('Lab B'), 15, 19),
-    new Room(new Label('Lab C'), 15, 20),
-    new Room(new Label('Lab D'), 15, 20, 5),
-    new Room(new Label('Lab E'), 15, 30, 1),
-    new Room(new Label('Lab F'), 5, 20, 5)
+    new Room('Lab A', 5, 10),
+    new Room('Lab B', 15, 19),
+    new Room('Lab C', 15, 20),
+    new Room('Lab D', 15, 20, 5),
+    new Room('Lab E', 15, 30, 1),
+    new Room('Lab F', 5, 20, 5)
 ];
 
 const map = {
@@ -41,9 +39,9 @@ function _getInitialFilters() {
 	};
 }
 
-const WelcomeMessage = ({view}) => (
+const WelcomeMessage = ({message, teacher}) => (
 	<div>
-		<p>{view.render()}</p>
+		<p>{message.render(teacher)}</p>
 	</div>
 )
 const Filters = ({onChange}) => (
@@ -68,8 +66,8 @@ const ClearFilters = ({onClick}) => (
 		<input type="button" value="Clear filters" onClick={onClick} />
 	</div>
 )
-const ResultMessage = ({view}) => (
-	<div>{view.render()}</div>
+const ResultMessage = ({view, list}) => (
+	<div>{view.render(list)}</div>
 )
 const Close = ({onClick}) => (
 	<input
@@ -83,20 +81,23 @@ const RoomView = ({title}) => (
 		<div><input value="reservar" type="button" /></div>
 	</div>
 )
-const Searcher = ({list,onClear,onClose,onFilterChange}) => (
-	<div className="searcher">
-		<div>
-			<Close className="closer" onClick={onClose} />
-			<ClearFilters onClick={onClear} />
-		</div>
-		<Filters onChange={onFilterChange} />
-		<ResultMessage view={list} />
+const Searcher = ({list,onClear,onClose,onFilterChange}) => {
 
-		{list.iterate((room, i) => {
-			return <RoomView key={i} title={room.getLabelAsText()} />
-		})}
-	</div>
-)
+	return (
+		<div className="searcher">
+			<div>
+				<Close className="closer" onClick={onClose} />
+				<ClearFilters onClick={onClear} />
+			</div>
+			<Filters onChange={onFilterChange} />
+			<ResultMessage view={new CustomFoundElements()} list={list} />
+	
+			{list.iterate((room, i) => {
+				return <RoomView key={i} title={room.getName()} />
+			})}
+		</div>
+	)
+}
 const NewSearch = ({onClick}) => (
 	<input
 		type="button" 
@@ -153,25 +154,21 @@ class App extends Component {
 	}
 
 	render() {
-		
-		const view = new RoomsListView(new RoomsList(rooms))
-
 		const teacher = new Teacher('Julio');
-		const headerView = new HeaderView(teacher);
+		const message = new TeacherWelcomeMessage();
 		
-		const homeView = new HomeView();
-		const searchView = Object.values(this.state.filters).reduce((a,b) => {
-			return a.search(b)
-		}, new SearchView(view));
+		const list = Object.values(this.state.filters).reduce((a,b) => {
+			return a.filter(b)
+		}, new RoomsList(rooms));
 
 		return (
 			<div className="App">
 
-				<WelcomeMessage view={headerView} />
+				<WelcomeMessage message={message} teacher={teacher} />
 
 				{this.state.searching ? 
 				<Searcher
-					list={searchView} 
+					list={list} 
 					onClear={this.clearFilters} 
 					onClose={this.initialState} 
 					onFilterChange={this.handleChange} /> : 

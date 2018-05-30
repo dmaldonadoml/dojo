@@ -1,3 +1,5 @@
+const EmptyRoomsList = require('./EmptyRoomList');
+
 function RoomsList(rooms) {
     this.rooms = rooms;
 }
@@ -21,20 +23,10 @@ RoomsList.prototype.count = function() {
     return this.rooms.length;
 };
 RoomsList.prototype.renderIn = function(view) {
-    return view.renderFoundResults(this.rooms.length);
+    return view.renderRoomList(this);
 };
 RoomsList.prototype.iterate = function(cb) {
     return this.rooms.map(cb);
-};
-
-function EmptyRoomsList() {}
-EmptyRoomsList.prototype.renderIn = function(view) {
-    return view.renderNonFoundResults();
-};
-EmptyRoomsList.prototype.iterate = function(cb) {
-};
-EmptyRoomsList.prototype.filter = function(cb) {
-    return this;
 };
 
 module.exports = RoomsList;

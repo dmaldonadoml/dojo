@@ -1,5 +1,5 @@
-function Room(label, capacity, area, computers) {
-    this.label = label;
+function Room(name, capacity, area, computers) {
+    this.name = name;
     this.capacity = capacity;
     this.area = area;
     this.computers = computers || 0;
@@ -13,11 +13,8 @@ Room.prototype.fitsArea = function(area) {
 Room.prototype.fitsComputers = function(computers) {
     return this.computers >= computers;
 };
-Room.prototype.getLabelAsText = function() {
-    return this.label.asText();
-};
-Room.prototype.getLabelAsBraille = function() {
-    return this.label.asBraille();
+Room.prototype.getName = function() {
+    return this.name;
 };
 
 module.exports = Room;

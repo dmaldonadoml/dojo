@@ -1,147 +1,170 @@
 const expect = require('chai').expect;
 
-const HomeView = require('../my-app/src/src/HomeView');
-const SearchView = require('../my-app/src/src/SearchView');
-const HeaderView = require('../my-app/src/src/HeaderView');
+const FoundElements = require('../my-app/src/src/FoundElements');
+const CustomFoundElements = require('../my-app/src/src/CustomFoundElements');
+const TeacherWelcomeMessage = require('../my-app/src/src/TeacherWelcomeMessage');
 const Teacher = require('../my-app/src/src/Teacher');
-const RoomsListView = require('../my-app/src/src/RoomListView');
 const RoomsList = require('../my-app/src/src/RoomList');
+const EmptyRoomList = require('../my-app/src/src/EmptyRoomList');
 const Room = require('../my-app/src/src/Room');
-const Label = require('../my-app/src/src/Label');
 
 const ComputersRequest = require('../my-app/src/src/requests/Computers');
 const CapacityRequest = require('../my-app/src/src/requests/Capacity');
 const AreaRequest = require('../my-app/src/src/requests/Area');
 
 const rooms = [
-    new Room(new Label('Lab A'), 5, 10),
-    new Room(new Label('Lab B'), 15, 19),
-    new Room(new Label('Lab C'), 15, 20),
-    new Room(new Label('Lab D'), 15, 20, 5),
-    new Room(new Label('Lab E'), 15, 30, 1),
-    new Room(new Label('Lab F'), 5, 20, 5)
+    new Room('Lab A', 5, 10),
+    new Room('Lab B', 15, 19),
+    new Room('Lab C', 15, 20),
+    new Room('Lab D', 15, 20, 5),
+    new Room('Lab E', 15, 30, 1),
+    new Room('Lab F', 5, 20, 5)
 ];
 
-describe("List Iterable", () => {
+describe("Iterable List", () => {
     it('should iterate over a list of rooms', () => {
-        const view = new RoomsListView(new RoomsList(rooms))
-        .search(new CapacityRequest(10));
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(10));
 
         let loops = 0;
 
-        view.iterate(room => {
+        list.iterate(room => {
             loops++;
         });
 
         expect(loops).to.eql(4);
+        expect(list.count()).to.eql(4);
     });
-    it('should iterate over a list of rooms', () => {
-        const view = new RoomsListView(new RoomsList(rooms))
-        .search(new CapacityRequest(60));
+    it('should iterate over an empty list of rooms', () => {
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(60));
 
         let loops = 0;
 
-        view.iterate(room => {
+        list.iterate(room => {
             loops++;
         });
 
         expect(loops).to.eql(0);
-    });
-    it('should can filter and empty list', () => {
-        const view = new RoomsListView(new RoomsList(rooms))
-        .search(new CapacityRequest(60))
-        .search(new AreaRequest(20));
-
-        expect(view.render()).to.eql('No rooms for you');
+        expect(list.count()).to.eql(0);
     });
 });
 
 describe("Renders", () => {
-    it("should render a welcome message to the teacher", () => {
+    it("should render welcome message to the teachers", () => {
         
-        const headerView = new HeaderView(new Teacher('Julio'));
+        const message = new TeacherWelcomeMessage();
+
+        expect(
+            message.render(new Teacher('Julio'))
+        ).to.eql('Welcome to the Unified Center, Julio.');
         
-        expect(headerView.render()).to.eql('Welcome to the Unified Center, Julio.');
+        expect(
+            message.render(new Teacher('Esther Díaz'))
+        ).to.eql('Welcome to the Unified Center, Esther Díaz.');
     });
     
-    it("should init a room search, search and render the results", () => {
+    it("[FoundElements] should render the found elements", () => {
         
-        const view = new RoomsListView(new RoomsList(rooms))
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(10));
+
+        const room = list.pickFirst();
         
-        const homeView = new HomeView();
-        
-        const searchView = homeView.initSearch(new SearchView(view));
-        
-        searchView.search(new CapacityRequest(10));
-        
-        const room = searchView.pickFirst();
-        
+        const view = new FoundElements();
+
         expect(room instanceof Room).to.eql(true);
-        expect(room.getLabelAsText()).to.eql('Lab B');
-        expect(searchView.render()).to.eql('Found 4 rooms');
+        expect(room.getName()).to.eql('Lab B');
+        expect(view.render(list)).to.eql('Found 4 rooms');
+    });
+    
+    it("[CustomFoundElements] should render the found elements", () => {
+        
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(10));
+
+        const room = list.pickFirst();
+        
+        const view = new CustomFoundElements();
+
+        expect(room instanceof Room).to.eql(true);
+        expect(room.getName()).to.eql('Lab B');
+        expect(view.render(list)).to.eql('Found 4 rooms');
+    });
+    
+    it("[FoundElements] should render the no found elements", () => {
+        
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(100));
+
+        const view = new FoundElements();
+
+        expect(view.render(list)).to.eql('Found 0 rooms');
+    });
+    
+    it('[CustomFoundElements] should render "Sorry, no rooms for your needs" when we got no results', () => {
+        
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(100));
+
+        const view = new CustomFoundElements();
+
+        expect(view.render(list)).to.eql('Sorry, no rooms for your needs');
     });
 });
 
-describe("Filters", () => {
-    it("should search for rooms with capacity for 10 students and pick one", () => {
+describe("RoomList filters", () => {
 
-        const view = new RoomsListView(new RoomsList(rooms))
-        .search(new CapacityRequest(10));
+    it('should filter for capacity of 10 students and pick a room', () => {
 
-        const room = view.pickFirst();
+        const room = new RoomsList(rooms)
+        .filter(new CapacityRequest(10))
+        .pickFirst();
 
         expect(room instanceof Room).to.eql(true);
-        expect(room.getLabelAsText()).to.eql('Lab B');
-        expect(view.render()).to.eql('Found 4 rooms');
+        expect(room.getName()).to.eql('Lab B');
     });
     
-    it("should search for rooms with capacity for 30 students and found zero", () => {
+    it("should filter for capacity of 30 students and get an empty list", () => {
 
-        const view = new RoomsListView(new RoomsList(rooms))
-        .search(new CapacityRequest(30));
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(30));
 
-        expect(view.render()).to.eql('No rooms for you');
+        expect(list instanceof EmptyRoomList).to.eql(true);
     });
 
-    it("should search a room with 20 m2 of area and pick one", () => {
-
-        const area = 20;
+    it("should filter for an area of 20m2 and pick a room", () => {
 
         const room = new RoomsList(rooms)
-        .filter(new AreaRequest(area))
+        .filter(new AreaRequest(20))
         .pickFirst();
 
         expect(room instanceof Room).to.eql(true);
-        expect(room.getLabelAsText()).to.eql('Lab C');
+        expect(room.getName()).to.eql('Lab C');
     });
 
-    it("should search a room with 5 computers and pick one", () => {
-
-        const computers = 5;
+    it("should filter for a room with 5 computers and pick one", () => {
 
         const room = new RoomsList(rooms)
-        .filter(new ComputersRequest(computers))
+        .filter(new ComputersRequest(5))
         .pickFirst();
 
         expect(room instanceof Room).to.eql(true);
-        expect(room.getLabelAsText()).to.eql('Lab D');
+        expect(room.getName()).to.eql('Lab D');
     });
 
-    it("should search a room with 1 computers and 30 m2 and pick one", () => {
-
-        const area = 30;
-        const computers = 1;
+    it("should filter for a room with 1 computers, an area of 30 m2 and pick one", () => {
 
         const room = new RoomsList(rooms)
-        .filter(new ComputersRequest(computers))
-        .filter(new AreaRequest(area))
+        .filter(new ComputersRequest(1))
+        .filter(new AreaRequest(30))
         .pickFirst();
 
         expect(room instanceof Room).to.eql(true);
-        expect(room.getLabelAsText()).to.eql('Lab E');
+        expect(room.getName()).to.eql('Lab E');
     });
 
-    it("should search a room with 5 computers, 20 m2 of area for 5 students and pick one", () => {
+    it("should filter for a room with 5 computers an area of 20 m2 and for 5 students and pick one", () => {
 
         const students = 5;
         const area = 20;
@@ -154,7 +177,22 @@ describe("Filters", () => {
         .pickSecond();
 
         expect(room instanceof Room).to.eql(true);
-        expect(room.getLabelAsBraille()).to.eql('⠇⠁⠃⠀⠋')
-        expect(room.getLabelAsText()).to.eql('Lab F');
+        expect(room.getName()).to.eql('Lab F');
+    });
+    
+    it("should filter for a room with 35 computers an area of 120 m2 and for 35 students and get an empty list", () => {
+
+        const students = 35;
+        const area = 120;
+        const computers = 35;
+
+        const list = new RoomsList(rooms)
+        .filter(new CapacityRequest(students))
+        .filter(new ComputersRequest(computers))
+        .filter(new AreaRequest(area))
+
+        //I dont check for a room here, because it doesnt have sense since
+        //The user is not able to pick one.
+        expect(list instanceof EmptyRoomList).to.eql(true);
     });
 });
