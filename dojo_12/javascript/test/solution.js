@@ -7,6 +7,7 @@ const Teacher = require('../my-app/src/src/Teacher');
 const RoomsList = require('../my-app/src/src/RoomList');
 const EmptyRoomList = require('../my-app/src/src/EmptyRoomList');
 const Room = require('../my-app/src/src/Room');
+const Label = require('../my-app/src/src/Label');
 
 const ComputersRequest = require('../my-app/src/src/requests/Computers');
 const CapacityRequest = require('../my-app/src/src/requests/Capacity');
@@ -194,5 +195,20 @@ describe("RoomList filters", () => {
         //I dont check for a room here, because it doesnt have sense since
         //The user is not able to pick one.
         expect(list instanceof EmptyRoomList).to.eql(true);
+    });
+});
+
+describe("Room booking", () => {
+
+    it('should get a booking after book a room', () => {
+
+        const teacher = new Teacher('Esther');
+        const booking = teacher.book(new Room('Lab A'));
+
+        const label = booking.getLabel();
+
+        expect(label instanceof Label).be.eql(true);
+        expect(label.toText()).be.eql('Lab A');
+        expect(label.toBraille()).be.eql('⠇⠁⠃⠀⠁');
     });
 });

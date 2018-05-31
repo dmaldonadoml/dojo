@@ -1,14 +1,15 @@
+//this dependency doesnt need to be here
 const braille = require('braille');
 
 function Label(label) {
     this.label = label;
 }
 
-Label.prototype.asBraille = function() {
+Label.prototype.toBraille = function() {
     return braille.toBraille(this.label);
 };
 
-Label.prototype.asText = function() {
+Label.prototype.toText = function() {
     return this.label;
 };
 

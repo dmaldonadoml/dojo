@@ -2,7 +2,9 @@
   padding: 10px;
 }
 .room-card {
+  border: 2px dotted #000;
   padding: 10px;
+  margin: 20px 0px;
 }
 .searcher {
   padding: 10px;
@@ -10,4 +12,35 @@
 }
 .searcher .filters-box {
   padding: 10px;
+}
+
+.close-box {
+  display: inline-block;
+  margin-right: 20px;
+}
+.clear-filters-box {
+  display: inline-block;
+}
+
+.booked-room-button {
+  margin-left: 10px;
+  display: inline-block;
+}
+
+.filters-box {
+  border: 1px dashed #000;
+  margin: 20px 0px;
+}
+
+.capacity-filter {
+  width: 165px;
+  display: inline-block;
+}
+.area-filter {
+  width: 165px;
+  display: inline-block;
+}
+.computers-filter {
+  width: 165px;
+  display: inline-block;
 }
