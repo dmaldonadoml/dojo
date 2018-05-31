@@ -12,15 +12,6 @@ import CapacityFilter from './src/requests/Capacity';
 import AreaFilter from './src/requests/Area';
 import ComputersFilter from './src/requests/Computers';
 
-const rooms = [
-    new Room('Lab A', 5, 10),
-    new Room('Lab B', 15, 19),
-    new Room('Lab C', 15, 20),
-    new Room('Lab D', 15, 20, 5),
-    new Room('Lab E', 15, 30, 1),
-    new Room('Lab F', 5, 20, 5)
-];
-
 const map = {
 	capacity: CapacityFilter,
 	computers: ComputersFilter,
@@ -45,43 +36,95 @@ const WelcomeMessage = ({message, teacher}) => (
 	</div>
 )
 const Filters = ({onChange}) => (
-	<div>
-		<p>Filters:</p>
-		<p>Capacity: <input 
+	<div className="filters-box">
+		<div className="filter-title">
+			<h2>Filtros</h2>
+		</div>
+		<div className="capacity-filter">Capacity: <input 
 			type="text"
 			name="capacity"
-			onChange={onChange} /></p>
-		<p>Área: <input 
+			onChange={onChange} /></div>
+		<div className="area-filter">Área: <input 
 			type="text"
 			name="area"
-			onChange={onChange} /></p>
-		<p>Computers: <input 
+			onChange={onChange} /></div>
+		<div className="computers-filter">Computers: <input 
 			type="text"
 			name="computers"
-			onChange={onChange} /></p>
+			onChange={onChange} /></div>
 	</div>
 )
 const ClearFilters = ({onClick}) => (
-	<div>
-		<input type="button" value="Clear filters" onClick={onClick} />
+	<div className="clear-filters-box">
+		<input type="button" value="Limpiar filtros" onClick={onClick} />
 	</div>
 )
 const ResultMessage = ({view, list}) => (
 	<div>{view.render(list)}</div>
 )
 const Close = ({onClick}) => (
-	<input
-		type="button" 
-		onClick={onClick} 
-		value="x" />
-)
-const RoomView = ({title}) => (
-	<div className="room-card">
-		<div>{title}</div>
-		<div><input value="reservar" type="button" /></div>
+	<div className="close-box">
+		<input
+			type="button" 
+			onClick={onClick} 
+			value="Terminar búsqueda" />
 	</div>
 )
-const Searcher = ({list,onClear,onClose,onFilterChange}) => {
+
+const BookedRoom = ({text,braille}) => (
+	<div>
+		<label>Booked</label>
+		<div className="booked-room-button">
+			<input type="button" value="Imprimir" onClick={() => {
+				alert(text)
+			}} />
+		</div>
+
+		<div className="booked-room-button">
+			<input type="button" value="Imprimir Braille" onClick={() => {
+				alert(braille)
+			}} />
+		</div>
+	</div>
+)
+
+class RoomView extends Component {
+	constructor(props) {
+		super(props);
+		this.book = this.book.bind(this);
+
+		this.state = {
+			booked: false,
+			booking: {}
+		};
+	}
+
+	book() {
+		this.setState(state => {
+			state.booked = true;
+			state.booking = this.props.onBook(this.props.room);
+			return state;
+		});
+	}
+
+	render() {
+		const {room} = this.props;
+		return (
+			<div className="room-card">
+				<h3>{room.getName()}</h3>
+
+				{this.state.booked ?
+					<BookedRoom
+					text={this.state.booking.getLabel().toText()}
+					braille={this.state.booking.getLabel().toBraille()} /> :
+					<div><input value="reservar" type="button" onClick={this.book} /></div>
+				}
+			</div>
+		)
+	}
+}
+
+const Searcher = ({list,onClear,onClose,onFilterChange,onBook}) => {
 
 	return (
 		<div className="searcher">
@@ -93,7 +136,7 @@ const Searcher = ({list,onClear,onClose,onFilterChange}) => {
 			<ResultMessage view={new CustomFoundElements()} list={list} />
 	
 			{list.iterate((room, i) => {
-				return <RoomView key={i} title={room.getName()} />
+				return <RoomView key={i} room={room} onBook={onBook} />
 			})}
 		</div>
 	)
@@ -102,7 +145,7 @@ const NewSearch = ({onClick}) => (
 	<input
 		type="button" 
 		onClick={onClick} 
-		value="new search!" />
+		value="Nueva búsqueda" />
 )
 
 class App extends Component {
@@ -113,10 +156,22 @@ class App extends Component {
 			filters: _getInitialFilters()
 		};
 
+		this.rooms = [
+			new Room('Lab A', 5, 10),
+			new Room('Lab B', 15, 19),
+			new Room('Lab C', 15, 20),
+			new Room('Lab D', 15, 20, 5),
+			new Room('Lab E', 15, 30, 1),
+			new Room('Lab F', 5, 20, 5)
+		];
+
+		this.teacher = new Teacher('Julio');
+
 		this.handleChange = this.handleChange.bind(this);
 		this.clearFilters = this.clearFilters.bind(this);
 		this.initialState = this.initialState.bind(this);
 		this.searchingState = this.searchingState.bind(this);
+		this.bookRoom = this.bookRoom.bind(this);
 	}
 
 	handleChange(e) {
@@ -153,13 +208,17 @@ class App extends Component {
 		});
 	}
 
+	bookRoom(room) {
+		return this.teacher.book(room);
+	}
+
 	render() {
-		const teacher = new Teacher('Julio');
+		const teacher = this.teacher;
 		const message = new TeacherWelcomeMessage();
 		
 		const list = Object.values(this.state.filters).reduce((a,b) => {
 			return a.filter(b)
-		}, new RoomsList(rooms));
+		}, new RoomsList(this.rooms));
 
 		return (
 			<div className="App">
@@ -167,11 +226,13 @@ class App extends Component {
 				<WelcomeMessage message={message} teacher={teacher} />
 
 				{this.state.searching ? 
+				//real world app Searcher does not have so many responsabilities!!!
 				<Searcher
 					list={list} 
-					onClear={this.clearFilters} 
-					onClose={this.initialState} 
-					onFilterChange={this.handleChange} /> : 
+					onClear={this.clearFilters}
+					onClose={this.initialState}
+					onFilterChange={this.handleChange} 
+					onBook={this.bookRoom} /> : 
 				<NewSearch onClick={this.searchingState} />}
 
 			</div>
