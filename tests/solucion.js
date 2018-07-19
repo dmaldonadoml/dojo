@@ -69,4 +69,24 @@ describe('Truco', () => {
             .equals(new EnvidoValue(7))
         ).be.eql(true);
     });
+    it('test_A_plays_5oro_B_plays_anchoEspada_A_go_to_the_mazo_B_sum_1_point', () => {
+
+        const a = new Mano(new CincoOro(), new CuatroCopa(), new CuatroBasto())
+        const b = new Mano(new AnchoEspada(), new SieteEspada(), new SeisOro())
+
+        
+        const ricky = new Player(a);
+        const nacho = new Player(a);
+        
+        const turn = new Turn(ricky, nacho);
+
+        ricky.play(new CincoOro())
+        nacho.play(new AnchoEspada())
+        
+        ricky.goToTheMaso(turn)
+
+        should(
+            turn.scoreOf(nacho)
+        ).be.eql(1);
+    });
 });
